@@ -50,7 +50,6 @@ const REDUCED: Timeline = {
 
 export function CinematicIntro() {
   const setIntroSeen = useDS3Store((s) => s.setIntroSeen);
-  const bumpMusicStart = useDS3Store((s) => s.bumpMusicStart);
   const [show, setShow] = useState(false);
   const [timeline, setTimeline] = useState<Timeline>(FULL);
 
@@ -72,13 +71,19 @@ export function CinematicIntro() {
   const dismiss = useCallback(() => {
     setShow(false);
     setIntroSeen(true);
-    bumpMusicStart();
     try {
       sessionStorage.setItem(SESSION_KEY, "1");
     } catch {
       /* ignore */
     }
-  }, [setIntroSeen, bumpMusicStart]);
+  }, [setIntroSeen]);
+
+  // Auto-dismiss once the full timeline has elapsed.
+  useEffect(() => {
+    if (!show) return;
+    const t = window.setTimeout(dismiss, timeline.total * 1000 + 100);
+    return () => window.clearTimeout(t);
+  }, [show, timeline, dismiss]);
 
   const D = timeline;
 
@@ -182,39 +187,11 @@ export function CinematicIntro() {
             </motion.p>
           </motion.div>
 
-          {/* ENTER button — appears in 0.8s, large + bright */}
-          <motion.button
-            type="button"
-            onClick={dismiss}
-            initial={{ opacity: 0, scale: 0.9 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{
-              delay: 0.8,
-              duration: 0.6,
-              ease: "easeOut",
-            }}
-            className="absolute bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-sm border-2 border-ember bg-gradient-to-b from-ember-deep/80 to-soot px-10 py-4 font-display text-base font-bold tracking-[0.3em] text-gold-bright uppercase shadow-[0_0_30px_rgba(255,122,24,0.5),inset_0_0_20px_rgba(255,122,24,0.2)] transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,122,24,0.7),inset_0_0_25px_rgba(255,122,24,0.3)]"
-            aria-label="Enter the kingdom and begin the music"
-          >
-            <span className="inline-block h-2 w-2 rounded-full bg-ember shadow-[0_0_10px_rgba(255,122,24,1)]" />
-            Enter
-          </motion.button>
-
-          {/* Hint text below the ENTER button */}
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 1.4, duration: 0.6 }}
-            className="absolute bottom-10 left-1/2 -translate-x-1/2 font-serif text-[0.65rem] italic tracking-[0.2em] text-gold/50 uppercase"
-          >
-            Click to awaken the flame
-          </motion.p>
-
-          {/* Small skip link for accessibility */}
+          {/* Skip button */}
           <button
             type="button"
             onClick={dismiss}
-            className="absolute bottom-6 right-6 border border-gold/20 px-3 py-1.5 text-[0.6rem] smallcaps text-gold/50 transition-colors hover:border-gold/50 hover:text-gold-bright sm:bottom-8 sm:right-8"
+            className="absolute bottom-6 right-6 border border-gold/20 px-4 py-2 text-[0.65rem] smallcaps text-gold/70 transition-colors hover:border-gold/50 hover:text-gold-bright sm:bottom-10 sm:right-10"
           >
             Skip
           </button>
