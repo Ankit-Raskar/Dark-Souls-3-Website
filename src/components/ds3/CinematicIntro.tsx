@@ -64,4 +64,164 @@ export function CinematicIntro() {
     } catch {
       /* sessionStorage unavailable */
     }
-    const reduced = window.matchMedia("(pref
+    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+    setTimeline(reduced ? REDUCED : FULL);
+    setShow(true);
+  }, [setIntroSeen]);
+
+  const dismiss = useCallback(() => {
+    setShow(false);
+    setIntroSeen(true);
+    bumpMusicStart();
+    try {
+      sessionStorage.setItem(SESSION_KEY, "1");
+    } catch {
+      /* ignore */
+    }
+  }, [setIntroSeen, bumpMusicStart]);
+
+  const D = timeline;
+
+  return (
+    <AnimatePresence>
+      {show && (
+        <motion.div
+          className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-soot"
+          initial={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          transition={{ duration: D.exitDur, ease: "easeInOut" }}
+        >
+          {/* Rising embers during the intro */}
+          <div className="absolute inset-0 pointer-events-none">
+            {Array.from({ length: D === REDUCED ? 6 : 18 }).map((_, i) => {
+              const style = {
+                left: (10 + Math.random() * 80) + "%",
+                bottom: "-12px",
+                "--drift": ((Math.random() - 0.5) * 80) + "px",
+                animation:
+                  "ember-rise " +
+                  (3 + Math.random() * 4) +
+                  "s linear " +
+                  (Math.random() * 3) +
+                  "s infinite",
+              } as CSSProperties;
+              return <span key={i} className="ember-dot" style={style} />;
+            })}
+          </div>
+
+          {/* Ember line draws horizontally across center */}
+          <motion.div
+            className="absolute left-1/2 top-1/2 h-[2px]"
+            style={{
+              width: "60%",
+              translateX: "-50%",
+              translateY: "-50%",
+              transformOrigin: "center",
+              background:
+                "linear-gradient(90deg, transparent, rgba(255,170,60,0.9), rgba(255,122,24,1), rgba(255,170,60,0.9), transparent)",
+              boxShadow:
+                "0 0 12px rgba(255,122,24,0.8), 0 0 24px rgba(194,65,12,0.5)",
+            }}
+            initial={{ scaleX: 0, opacity: 0 }}
+            animate={{ scaleX: 1, opacity: 1 }}
+            transition={{
+              delay: D.lineStart,
+              duration: D.lineDur,
+              ease: "easeOut",
+            }}
+          />
+
+          {/* Line expands into a faint vertical flame reveal */}
+          <motion.div
+            className="absolute left-1/2 top-1/2"
+            style={{
+              width: "50%",
+              height: "40vh",
+              translateX: "-50%",
+              translateY: "-50%",
+              transformOrigin: "center",
+              background:
+                "radial-gradient(ellipse at center, rgba(255,122,24,0.18), rgba(194,65,12,0.08) 40%, transparent 70%)",
+              filter: "blur(8px)",
+            }}
+            initial={{ scaleY: 0, opacity: 0 }}
+            animate={{ scaleY: 1, opacity: 1 }}
+            transition={{
+              delay: D.flameStart,
+              duration: D.flameDur,
+              ease: "easeOut",
+            }}
+          />
+
+          {/* Title + subtitle */}
+          <motion.div
+            className="relative z-10 px-6 text-center"
+            initial={{ opacity: 0, y: 20, filter: "blur(8px)" }}
+            animate={{ opacity: 1, y: 0, filter: "blur(0px)" }}
+            transition={{
+              delay: D.titleStart,
+              duration: D.titleDur,
+              ease: "easeOut",
+            }}
+          >
+            <h1 className="font-display tracking-cinematic text-glow-ember text-3xl sm:text-5xl md:text-7xl font-bold text-ember">
+              DARK SOULS III
+            </h1>
+            <motion.p
+              className="mt-5 smallcaps text-gold-bright text-[0.65rem] sm:text-xs"
+              style={{ letterSpacing: "0.4em" }}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{
+                delay: D.subtitleStart,
+                duration: D.subtitleDur,
+                ease: "easeOut",
+              }}
+            >
+              Prepare to Die Once More
+            </motion.p>
+          </motion.div>
+
+          {/* ENTER button — appears in 0.8s, large + bright */}
+          <motion.button
+            type="button"
+            onClick={dismiss}
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{
+              delay: 0.8,
+              duration: 0.6,
+              ease: "easeOut",
+            }}
+            className="absolute bottom-24 left-1/2 flex -translate-x-1/2 items-center gap-3 rounded-sm border-2 border-ember bg-gradient-to-b from-ember-deep/80 to-soot px-10 py-4 font-display text-base font-bold tracking-[0.3em] text-gold-bright uppercase shadow-[0_0_30px_rgba(255,122,24,0.5),inset_0_0_20px_rgba(255,122,24,0.2)] transition-all hover:scale-105 hover:shadow-[0_0_40px_rgba(255,122,24,0.7),inset_0_0_25px_rgba(255,122,24,0.3)]"
+            aria-label="Enter the kingdom and begin the music"
+          >
+            <span className="inline-block h-2 w-2 rounded-full bg-ember shadow-[0_0_10px_rgba(255,122,24,1)]" />
+            Enter
+          </motion.button>
+
+          {/* Hint text below the ENTER button */}
+          <motion.p
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 1.4, duration: 0.6 }}
+            className="absolute bottom-10 left-1/2 -translate-x-1/2 font-serif text-[0.65rem] italic tracking-[0.2em] text-gold/50 uppercase"
+          >
+            Click to awaken the flame
+          </motion.p>
+
+          {/* Small skip link for accessibility */}
+          <button
+            type="button"
+            onClick={dismiss}
+            className="absolute bottom-6 right-6 border border-gold/20 px-3 py-1.5 text-[0.6rem] smallcaps text-gold/50 transition-colors hover:border-gold/50 hover:text-gold-bright sm:bottom-8 sm:right-8"
+          >
+            Skip
+          </button>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  );
+}
+
+export default CinematicIntro;
