@@ -6,7 +6,6 @@ import { useDS3Store } from "./useDS3Store";
 
 const SESSION_KEY = "ds3-intro-seen";
 
-/** Timeline (in seconds). Reduced-motion variant shortens to ~1.5s total. */
 interface Timeline {
   lineStart: number;
   lineDur: number;
@@ -63,39 +62,6 @@ export function CinematicIntro() {
         return;
       }
     } catch {
-      /* sessionStorage unavailable — fall through and play */
+      /* sessionStorage unavailable */
     }
-    const reduced = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
-    setTimeline(reduced ? REDUCED : FULL);
-    setShow(true);
-  }, [setIntroSeen]);
-
-  const dismiss = useCallback(() => {
-    setShow(false);
-    setIntroSeen(true);
-    bumpMusicStart();
-    try {
-      sessionStorage.setItem(SESSION_KEY, "1");
-    } catch {
-      /* ignore */
-    }
-  }, [setIntroSeen, bumpMusicStart]);
-
-  const D = timeline;
-
-  return (
-    <AnimatePresence>
-      {show && (
-        <motion.div
-          className="fixed inset-0 z-[120] flex items-center justify-center overflow-hidden bg-soot"
-          initial={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          transition={{ duration: D.exitDur, ease: "easeInOut" }}
-        >
-          {/* Rising embers during the intro */}
-          <div className="absolute inset-0 pointer-events-none">
-            {Array.from({ length: D === REDUCED ? 6 : 18 }).map((_, i) => {
-              const style = {
-                left: `${10 + Math.random() * 80}%`,
-                bottom: "-12px",
-                "--drift": `${(Math.random
+    const reduced = window.matchMedia("(pref
