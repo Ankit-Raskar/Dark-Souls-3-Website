@@ -49,6 +49,14 @@ export interface DS3State {
   page: DS3Page;
   setPage: (page: DS3Page) => void;
 
+  /**
+   * Incremented to signal the MusicPlayer to attempt playback (used by the
+   * cinematic intro's ENTER button — that click is the user gesture that
+   * unlocks browser audio autoplay).
+   */
+  musicStartSignal: number;
+  bumpMusicStart: () => void;
+
   /** Command-palette / search overlay open state. */
   searchOpen: boolean;
   setSearchOpen: (open: boolean) => void;
@@ -74,6 +82,9 @@ export const useDS3Store = create<DS3State>()(
           window.scrollTo({ top: 0, behavior: "auto" });
         }
       },
+
+      musicStartSignal: 0,
+      bumpMusicStart: () => set((s) => ({ musicStartSignal: s.musicStartSignal + 1 })),
 
       searchOpen: false,
       setSearchOpen: (searchOpen) => set({ searchOpen }),
