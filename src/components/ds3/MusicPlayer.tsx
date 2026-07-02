@@ -78,6 +78,7 @@ export function MusicPlayer() {
   const [showPrompt, setShowPrompt] = useState(false);
 
   const musicEnabled = useDS3Store((s) => s.musicEnabled);
+  const musicStartSignal = useDS3Store((s) => s.musicStartSignal);
 
   // Keep refs in sync for use inside stable callbacks / effect closures.
   useEffect(() => {
@@ -183,6 +184,20 @@ export function MusicPlayer() {
       window.removeEventListener("keydown", onFirstInteract);
     };
   }, [mounted, musicEnabled, fadeTo, startPlay]);
+
+  // React to explicit music-start signals (e.g. the cinematic intro's ENTER
+  // button). That click is a genuine user gesture, so audio.play() succeeds
+  // and bypasses browser autoplay blocking. Skips the very first render (0).
+  const prevSignal = useRef(0);
+  useEffect(() => {
+    if (!mounted) return;
+    if (musicStartSignal === prevSignal.current) return;
+    prevSignal.current = musicStartSignal;
+    if (musicStartSignal <= 0) return;
+    if (!musicEnabled) return;
+    // Start (or resume) playback.
+    startPlay();
+  }, [musicStartSignal, mounted, musicEnabled, startPlay]);
 
   // Global disable: pause when musicEnabled flips off.
   useEffect(() => {
